@@ -47,9 +47,8 @@ Yes! The plugin includes a search filter and AJAX-powered updates for fast, effi
 
 == Screenshots ==
 
-1. List of subsites with visibility toggles
+1. plugin activation page
 2. Bulk actions with select-all checkbox
-3. AJAX success notifications
 
 == Changelog ==
 

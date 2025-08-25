@@ -35,15 +35,20 @@ if (!class_exists('Multisite_Visibility_Manager')) {
 		public function __construct()
 		{
 			if (is_multisite() && is_main_site()) {
+
 				add_action('network_admin_menu', [$this, 'registerMenu']);
-				add_action('network_adminNotices', [$this, 'adminNotices']);
+				add_action('network_admin_notices', [$this, 'adminNotices']);
 
 				// AJAX actions
-				add_action('wp_ajaxUpdateVisibility', [$this, 'ajaxUpdateVisibility']);
-				add_action('wp_ajaxBulkUpdateVisibility', [$this, 'ajaxBulkUpdateVisibility']);
+				add_action('wp_ajax_update_visibility', [$this, 'ajaxUpdateVisibility']);
+				add_action('wp_ajax_bulk_update_visibility', [$this, 'ajaxBulkUpdateVisibility']);
 
 				// Enqueue scripts
-				add_action('admin_enqueueScripts', [$this, 'enqueueScripts']);
+				add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
+
+				//show donate link
+				// Add link for site admin Plugins page
+				add_filter('plugin_row_meta', [$this, 'addDonateLink'], 10, 2);
 			}
 		}
 
@@ -91,7 +96,7 @@ if (!class_exists('Multisite_Visibility_Manager')) {
 			}
 
 
-			wp_enqueue_style('multisite-visibility-style-css', plugin_dir_url(__DIR__) . 'assets/styles/multisite-visibility-manager.css', [], '3.1');
+			wp_enqueue_style('multisite-visibility-style-css', plugin_dir_url(__DIR__) . 'assets/styles/multisite-visibility-manager.css', [], microtime());
 
 			wp_enqueue_script(
 				'multisite-visibility-manager-js',
@@ -126,7 +131,11 @@ if (!class_exists('Multisite_Visibility_Manager')) {
 			$sites = get_sites(['number' => 0]);
 ?>
 			<div class="wrap">
-				<h1>Multisite Visibility Manager</h1>
+				<div class="donate-link">
+					<h1>Multisite Visibility Manager</h1>
+					<img src="<?php echo esc_url(plugin_dir_url(__DIR__) . 'assets/images/donate.jpg'); ?>" alt="Donate Icon" style="width:100px;height:100px;">
+				</div>
+
 				<form method="get">
 					<input type="hidden" name="page" value="multisite-visibility-manager">
 					<p>
@@ -262,6 +271,23 @@ if (!class_exists('Multisite_Visibility_Manager')) {
 			}
 
 			wp_send_json_error('No sites selected for bulk update');
+		}
+
+		/**
+		 * Add a donate link to the plugin action links.
+		 *
+		 * @param array  $links Existing plugin action links.
+		 * @param string $file  The plugin file path.
+		 * 
+		 * @return array Modified plugin action links.
+		 */
+		public function addDonateLink($links, $file)
+		{
+
+			if ($file == 'multisite-visibility-manager/multisite-visibility-manager.php') {
+				$links[] = '<a href="https://www.buymeacoffee.com/abbeymaniak" target="_blank" style="color: #ff3131;font-weight: bold;">' . __('Donate', 'multisite-visibility-manager') . '</a>';
+			}
+			return $links;
 		}
 	}
 }

@@ -34,3 +34,9 @@
 	margin-top: 10px;
 	font-weight: bold;
 }
+
+.donate-link {
+	display: flex;
+    justify-content: space-between;
+
+}
