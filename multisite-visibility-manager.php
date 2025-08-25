@@ -1,15 +1,19 @@
 <?php
+
 /**
  *  Multisite Visibility Manager
  *
  * Plugin Name:     Multisite Visibility Manager
  * Description:     This plugin is responsible for Managing search engine visibility across all subsites in the network from one settings page.
+ * Plugin URI:		https://github.com/abbeymaniak/multisite-visibility-manager
  * Author:          Abiodun Paul Ogunnaike
+ * Author URI:		https://linkedin.com/in/abiodun-paul-ogunnaike
  * Text Domain:     multisite-visibility-manager
  * Network: 		true
  * Domain Path:     /languages
- * Version:         0.1.0
+ * Version:         1.0.0
  * prefix:          Multisite_Visibility_Manager
+ * Donate:          https://www.buymeacoffee.com/abbeymaniak
  * License:         GPL v2 or later
  * License URI:     https://www.gnu.org/licenses/gpl-2.0.htmls
  * Requires PHP:    7.4
