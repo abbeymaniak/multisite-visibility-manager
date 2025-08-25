@@ -1,8 +1,30 @@
 {
+  "name": "abbeymaniak/multisite-visibility-manager",
+  "autoload": {
+    "psr-4": {
+      "Abbeymaniak\\MultisiteVisibilityManager\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "personal",
+      "email": "primastech101@gmail.com"
+    }
+  ],
+  "require": {},
   "require-dev": {
+    "wp-coding-standards/wpcs": "^3.0",
+    "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
     "wp-cli/i18n-command": "^2"
   },
+  "config": {
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
+  },
   "scripts": {
-    "makepot": "wp i18n make-pot ."
+    "makepot": "wp i18n make-pot .",
+    "standards:check": "@php ./vendor/squizlabs/php_codesniffer/bin/phpcs",
+    "standards:fix": "@php ./vendor/squizlabs/php_codesniffer/bin/phpcbf"
   }
 }
