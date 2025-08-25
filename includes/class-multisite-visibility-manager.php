@@ -49,7 +49,21 @@ if (!class_exists('Multisite_Visibility_Manager')) {
 				//show donate link
 				// Add link for site admin Plugins page
 				add_filter('plugin_row_meta', [$this, 'addDonateLink'], 10, 2);
+				add_action('init', [$this, 'unique_languages']);
 			}
+		}
+
+
+		/**
+		 * 
+		 * Load plugin textdomain for translations.
+		 *
+		 * @return void
+		 */
+		public function unique_languages()
+		{
+
+			load_plugin_textdomain('multisite-visibility-manager', false, dirname(plugin_basename(__FILE__)) . '/languages');
 		}
 
 		/**
