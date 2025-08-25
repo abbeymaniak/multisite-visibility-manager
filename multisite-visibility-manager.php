@@ -5,7 +5,7 @@
  *
  * @category Plugin
  * @package  Multisite_Visibility_Manager
- * @author   Abiodun Paul Ogunnaike <primastech101@gmail.com>
+ * @author   Abiodun Paul Ogunnaike <ayo_ogunnaike@yahoo.com>
  * @license  http://www.gnu.org/licenses/gpl-2.0.txt GPLv2 or later
  * @link     https://github.com/abbeymaniak/multisite-visibility-manager
  *
