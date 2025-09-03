@@ -5,7 +5,7 @@
  *
  * @category Plugin
  * @package  Multisite_Visibility_Manager
- * @author   Abiodun Paul Ogunnaike <ayo_ogunnaike@yahoo.com>
+ * @author   Abiodun Paul Ogunnaike <primastech101@gmail.com>
  * @license  http://www.gnu.org/licenses/gpl-2.0.txt GPLv2 or later
  * @link     https://github.com/abbeymaniak/multisite-visibility-manager
  *
@@ -13,19 +13,21 @@
  * Requires PHP:      7.4
  */
 
-if (!class_exists('Multisite_Visibility_Manager')) {
+
 
     /**
      * This is the Multisite Visibility Manager class.
      *
      * @category Plugin
      * @package  Multisite_Visibility_Manager
-     * @author   Abiodun Paul Ogunnaike <ayo_ogunnaike@yahoo.com>
+     * @author   Abiodun Paul Ogunnaike <primastech101@gmail.com>
      * @license  http://www.gnu.org/licenses/gpl-2.0.txt GPLv2 or later
      * @link     https://github.com/abbeymaniak/multisite-visibility-manager
      */
     class Multisite_Visibility_Manager
     {
+
+
 
         /**
          * Constructor to initialize the plugin.
@@ -36,31 +38,41 @@ if (!class_exists('Multisite_Visibility_Manager')) {
         {
             if (is_multisite() && is_main_site()) {
 
-                add_action('network_admin_menu', [$this, 'registerMenu']);
-                add_action('network_admin_notices', [$this, 'adminNotices']);
+                add_action('network_admin_menu', [$this, 'MvmRegisterMenu']);
+                add_action('network_admin_notices', [$this, 'MvmAdminNotices']);
 
                 // AJAX actions
-                add_action('wp_ajax_update_visibility', [$this, 'ajaxUpdateVisibility']);
-                add_action('wp_ajax_bulk_update_visibility', [$this, 'ajaxBulkUpdateVisibility']);
+                add_action('wp_ajax_mvm_update_visibility', [$this, 'MvmAjaxUpdateVisibility']);
+                add_action('wp_ajax_mvm_bulk_update_visibility', [$this, 'MvmAjaxBulkUpdateVisibility']);
 
                 // Enqueue scripts
-                add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
+                add_action('admin_enqueue_scripts', [$this, 'MvmEnqueueScripts']);
 
                 //show donate link
                 // Add link for site admin Plugins page
-                add_filter('plugin_row_meta', [$this, 'addDonateLink'], 10, 2);
-                
+                add_filter('plugin_row_meta', [$this, 'MvmAddDonateLink'], 10, 2);
+                add_action('init', [$this, 'MvmUniqueLanguages']);
             }
         }
 
 
+        /**
+         * Load plugin textdomain for translations.
+         *
+         * @return void
+         */
+        public function MvmUniqueLanguages()
+        {
+
+            load_plugin_textdomain('multisite-visibility-manager', false, dirname(plugin_basename(__FILE__)) . '/languages');
+        }
 
         /**
          * Register the admin menu for the plugin.
          *
          * @return void
          */
-        public function registerMenu()
+        public function MvmRegisterMenu()
         {
             add_menu_page(
                 'Multisite Visibility',
@@ -78,7 +90,7 @@ if (!class_exists('Multisite_Visibility_Manager')) {
          *
          * @return void
          */
-        public function adminNotices()
+        public function MvmAdminNotices()
         {
             if (isset($_GET['visibility_updated']) && $_GET['visibility_updated'] === 'true') {
                 echo '<div class="notice notice-success is-dismissible"><p>Visibility settings updated successfully.</p></div>';
@@ -92,7 +104,7 @@ if (!class_exists('Multisite_Visibility_Manager')) {
          * 
          * @return void|null
          */
-        public function enqueueScripts($hook)
+        public function MvmEnqueueScripts($hook)
         {
             if ($hook !== 'toplevel_page_multisite-visibility-manager') {
                 return;
@@ -113,8 +125,8 @@ if (!class_exists('Multisite_Visibility_Manager')) {
                 'multisite-visibility-manager-js',
                 'MVM_AJAX',
                 [
-                'ajax_url' => admin_url('admin-ajax.php'),
-                'nonce'    => wp_create_nonce('update_visibility_nonce')
+                    'ajax_url' => admin_url('admin-ajax.php'),
+                    'nonce'    => wp_create_nonce('update_visibility_nonce')
                 ]
             );
         }
@@ -130,32 +142,33 @@ if (!class_exists('Multisite_Visibility_Manager')) {
                 wp_die(__('You do not have permission to access this page.', 'multisite-visibility-manager'));
             }
 
+
             $search = isset($_GET['search']) ? sanitize_text_field($_GET['search']) : '';
             $sites = get_sites(['number' => 0]);
             ?>
             <div class="wrap">
                 <div class="donate-link">
                     <h1>Multisite Visibility Manager</h1>
-                    <img src="<?php echo esc_url(plugin_dir_url(__DIR__) . 'assets/images/donate.jpg'); ?>" alt="Donate Icon" style="width:100px;height:100px;">
+                    <img src="<?php echo esc_url(plugin_dir_url(__DIR__) . 'assets/images/donate.jpg'); ?>" alt="Donate Icon" style="width:100px;height:100px;cursor:pointer;">
                 </div>
 
                 <form method="get">
                     <input type="hidden" name="page" value="multisite-visibility-manager">
                     <p>
                         <input type="text" name="search" value="<?php echo esc_attr($search); ?>" placeholder="Search by domain or path" />
-            <?php
-            if (isset($_GET['search']) && !empty($_GET['search'])) {
-                $url = $_SERVER['REQUEST_URI'];
-                $new_url = remove_query_arg('search', $url);
-                ?>
+                        <?php
+                        if (isset($_GET['search']) && !empty($_GET['search'])) {
+                            $url = sanitize_text_field($_SERVER['REQUEST_URI']);
+                            $new_url = remove_query_arg('search', $url);
+                            ?>
                             <a href="<?php echo esc_url($new_url); ?>" class="button">
                                 Reset
                             </a>
-            <?php } else { ?>
+                        <?php } else { ?>
                             <button type="submit" class="button">Search</button>
-                <?php
-            }
-            ?>
+                            <?php
+                        }
+                        ?>
 
                     </p>
                 </form>
@@ -180,16 +193,16 @@ if (!class_exists('Multisite_Visibility_Manager')) {
                         </tr>
                     </thead>
                     <tbody>
-            <?php foreach ($sites as $site) :
-                if ($search && stripos($site->domain . $site->path, $search) === false) {
-                    continue;
-                }
+                        <?php foreach ($sites as $site) :
+                            if ($search && stripos($site->domain . $site->path, $search) === false) {
+                                continue;
+                            }
 
 
-                switch_to_blog($site->blog_id);
-                $is_discouraged = get_option('blog_public') == 0;
-                restore_current_blog();
-                ?>
+                            switch_to_blog($site->blog_id);
+                            $is_discouraged = get_option('blog_public') == 0;
+                            restore_current_blog();
+                            ?>
                             <tr>
                                 <td><input type="checkbox" class="site-checkbox" data-site="<?php echo esc_attr($site->blog_id); ?>" /></td>
                                 <td><?php echo esc_html($site->blogname); ?></td>
@@ -201,7 +214,7 @@ if (!class_exists('Multisite_Visibility_Manager')) {
                                     </label>
                                 </td>
                             </tr>
-            <?php endforeach; ?>
+                        <?php endforeach; ?>
                     </tbody>
                 </table>
 
@@ -225,13 +238,15 @@ if (!class_exists('Multisite_Visibility_Manager')) {
          *
          * @return void
          */
-        public function ajaxUpdateVisibility()
+        public function MvmAjaxUpdateVisibility()
         {
-            check_ajax_referer('update_visibility_nonce');
+
 
             if (!current_user_can('manage_network_options')) {
                 wp_send_json_error('You are Unauthorized');
             }
+
+            check_ajax_referer('update_visibility_nonce', 'nonce');
 
             $site_id = isset($_POST['site_id']) ? intval($_POST['site_id']) : 0;
             $status  = isset($_POST['status']) && $_POST['status'] === 'true' ? 0 : 1;
@@ -252,13 +267,15 @@ if (!class_exists('Multisite_Visibility_Manager')) {
          *
          * @return void
          */
-        public function ajaxBulkUpdateVisibility()
+        public function MvmAjaxBulkUpdateVisibility()
         {
-            check_ajax_referer('update_visibility_nonce');
+
 
             if (!current_user_can('manage_network_options')) {
                 wp_send_json_error(__('You are Unauthorized', 'multisite-visibility-manager'));
             }
+
+            check_ajax_referer('update_visibility_nonce');
 
             $site_ids = isset($_POST['site_ids']) ? array_map('intval', $_POST['site_ids']) : [];
             $status   = isset($_POST['status']) && $_POST['status'] === 'discourage' ? 0 : 1;
@@ -284,13 +301,13 @@ if (!class_exists('Multisite_Visibility_Manager')) {
          * 
          * @return array Modified plugin action links.
          */
-        public function addDonateLink($links, $file)
+        public function MvmAddDonateLink($links, $file)
         {
 
             if ($file == 'multisite-visibility-manager/multisite-visibility-manager.php') {
-                $links[] = '<a href="https://www.buymeacoffee.com/abbeymaniak" target="_blank" style="color: #ff3131;font-weight: bold;">' . __('Donate', 'multisite-visibility-manager') . '</a>';
+                $links[] = '<a href="<?php echo esc_url(https://www.buymeacoffee.com/abbeymaniak); ?>" target="_blank" style="color: #ff3131;font-weight: bold;">' . __('Donate', 'multisite-visibility-manager') . '</a>';
             }
             return $links;
         }
     }
-}
+

@@ -5,7 +5,7 @@
  *
  * @category Plugin
  * @package  Multisite_Visibility_Manager
- * @author   Abiodun Paul Ogunnaike <ayo_ogunnaike@yahoo.com>
+ * @author   Abiodun Paul Ogunnaike <primastech101@gmail.com>
  * @license  http://www.gnu.org/licenses/gpl-2.0.txt GPLv2 or later
  * @link     https://github.com/abbeymaniak/multisite-visibility-manager
  *
@@ -15,8 +15,8 @@
  * Author:            Abiodun Paul Ogunnaike
  * Author URI:        https://linkedin.com/in/abiodun-paul-ogunnaike
  * Text Domain:       multisite-visibility-manager
- * License:           GPL v2 or later
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
+ * Domain Path:       /languages
  * Network:           true
  * Version:           1.0.0
  * Requires PHP:      7.4
@@ -31,4 +31,5 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-multisite-visibility-ma
 
 
 //instantiate the class
+
 $Multisite_Visibility_Manager = new Multisite_Visibility_Manager();
