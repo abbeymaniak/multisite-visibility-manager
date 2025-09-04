@@ -35,7 +35,7 @@ class MultisiteVisibilityManager
     public function __construct()
     {
         if (is_multisite() && is_main_site()) {
-            add_action('init', [$this, 'mvmUniqueLanguages']);
+           
             add_action('network_admin_menu', [$this, 'mvmRegisterMenu']);
             add_action('network_admin_notices', [$this, 'mvmAdminNotices']);
 
@@ -52,17 +52,6 @@ class MultisiteVisibilityManager
         }
     }
 
-
-    /**
-     *
-     * Load plugin textdomain for translations.
-     *
-     * @return void
-     */
-    public function mvmUniqueLanguages()
-    {
-        load_plugin_textdomain('multisite-visibility-manager', false, dirname(plugin_basename(__FILE__)) . '/languages');
-    }
 
     /**
      * Register the admin menu for the plugin.
