@@ -35,21 +35,20 @@ class MultisiteVisibilityManager
     public function __construct()
     {
         if (is_multisite() && is_main_site()) {
-            add_action('init', [$this, 'MvmUniqueLanguages']);
-            add_action('network_admin_menu', [$this, 'MvmRegisterMenu']);
-            add_action('network_admin_notices', [$this, 'MvmAdminNotices']);
+            add_action('init', [$this, 'mvmUniqueLanguages']);
+            add_action('network_admin_menu', [$this, 'mvmRegisterMenu']);
+            add_action('network_admin_notices', [$this, 'mvmAdminNotices']);
 
             // AJAX actions
-            add_action('wp_ajax_mvm_update_visibility', [$this, 'MvmAjaxUpdateVisibility']);
-            add_action('wp_ajax_mvm_bulk_update_visibility', [$this, 'MvmAjaxBulkUpdateVisibility']);
+            add_action('wp_ajax_mvm_update_visibility', [$this, 'mvmAjaxUpdateVisibility']);
+            add_action('wp_ajax_mvm_bulk_update_visibility', [$this, 'mvmAjaxBulkUpdateVisibility']);
 
             // Enqueue scripts
-            add_action('admin_enqueue_scripts', [$this, 'MvmEnqueueScripts']);
+            add_action('admin_enqueue_scripts', [$this, 'mvmEnqueueScripts']);
 
             //show donate link
             // Add link for site admin Plugins page
-            add_filter('plugin_row_meta', [$this, 'MvmAddDonateLink'], 10, 2);
-
+            add_filter('plugin_row_meta', [$this, 'mvmAddDonateLink'], 10, 2);
         }
     }
 
@@ -60,7 +59,7 @@ class MultisiteVisibilityManager
      *
      * @return void
      */
-    public function MvmUniqueLanguages()
+    public function mvmUniqueLanguages()
     {
         load_plugin_textdomain('multisite-visibility-manager', false, dirname(plugin_basename(__FILE__)) . '/languages');
     }
@@ -70,14 +69,14 @@ class MultisiteVisibilityManager
      *
      * @return void
      */
-    public function MvmRegisterMenu()
+    public function mvmRegisterMenu()
     {
         add_menu_page(
             'Multisite Visibility',
             'Visibility Manager',
             'manage_network_options',
             'multisite-visibility-manager',
-            [$this, 'settingsPage'],
+            [$this, 'mvmSettingsPage'],
             'dashicons-visibility',
             90
         );
@@ -88,7 +87,7 @@ class MultisiteVisibilityManager
      *
      * @return void
      */
-    public function adminNotices()
+    public function mvmAdminNotices()
     {
         if (isset($_GET['visibility_updated']) && $_GET['visibility_updated'] === 'true') {
             echo '<div class="notice notice-success is-dismissible"><p>Visibility settings updated successfully.</p></div>';
@@ -102,7 +101,7 @@ class MultisiteVisibilityManager
      *
      * @return void|null
      */
-    public function enqueueScripts($hook)
+    public function mvmEnqueueScripts($hook)
     {
         if ($hook !== 'toplevel_page_multisite-visibility-manager') {
             return;
@@ -134,7 +133,7 @@ class MultisiteVisibilityManager
      *
      * @return void
      */
-    public function settingsPage()
+    public function mvmSettingsPage()
     {
         if (!current_user_can('manage_network_options')) {
             wp_die(__('You do not have permission to access this page.', 'multisite-visibility-manager'));
@@ -235,7 +234,7 @@ class MultisiteVisibilityManager
      *
      * @return void
      */
-    public function ajaxUpdateVisibility()
+    public function mvmajaxUpdateVisibility()
     {
         check_ajax_referer('update_visibility_nonce');
 
@@ -262,7 +261,7 @@ class MultisiteVisibilityManager
      *
      * @return void
      */
-    public function ajaxBulkUpdateVisibility()
+    public function mvmajaxBulkUpdateVisibility()
     {
         check_ajax_referer('update_visibility_nonce');
 
@@ -294,7 +293,7 @@ class MultisiteVisibilityManager
      *
      * @return array Modified plugin action links.
      */
-    public function addDonateLink($links, $file)
+    public function mvmAddDonateLink($links, $file)
     {
 
         if ($file == 'multisite-visibility-manager/multisite-visibility-manager.php') {
