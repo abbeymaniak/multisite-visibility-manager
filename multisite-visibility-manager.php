@@ -24,6 +24,8 @@
  * Donate:            https://www.buymeacoffee.com/abbeymaniak
  */
 
+use Mvm\MultisiteVisibilityManager\MultisiteVisibilityManager;
+
 defined('ABSPATH') || die('Unauthorized Access');
 
 // Include the main plugin class.
@@ -32,4 +34,4 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-multisite-visibility-ma
 
 //instantiate the class
 
-$Multisite_Visibility_Manager = new Multisite_Visibility_Manager();
+$Multisite_Visibility_Manager = new MultisiteVisibilityManager();

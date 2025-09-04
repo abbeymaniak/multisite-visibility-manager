@@ -4,7 +4,7 @@
  * Multisite Visibility Manager
  *
  * @category Plugin
- * @package  Multisite_Visibility_Manager
+ * @package  MultisiteVisibilityManager
  * @author   Abiodun Paul Ogunnaike <primastech101@gmail.com>
  * @license  http://www.gnu.org/licenses/gpl-2.0.txt GPLv2 or later
  * @link     https://github.com/abbeymaniak/multisite-visibility-manager
@@ -13,162 +13,159 @@
  * Requires PHP:      7.4
  */
 
-
+namespace Mvm\MultisiteVisibilityManager;
 
     /**
      * This is the Multisite Visibility Manager class.
      *
      * @category Plugin
-     * @package  Multisite_Visibility_Manager
+     * @package  MultisiteVisibilityManager
      * @author   Abiodun Paul Ogunnaike <primastech101@gmail.com>
      * @license  http://www.gnu.org/licenses/gpl-2.0.txt GPLv2 or later
      * @link     https://github.com/abbeymaniak/multisite-visibility-manager
      */
-    class Multisite_Visibility_Manager
+class MultisiteVisibilityManager
+{
+
+    /**
+     * Constructor to initialize the plugin.
+     *
+     * @return void
+     */
+    public function __construct()
     {
+        if (is_multisite() && is_main_site()) {
+            add_action('init', [$this, 'MvmUniqueLanguages']);
+            add_action('network_admin_menu', [$this, 'MvmRegisterMenu']);
+            add_action('network_admin_notices', [$this, 'MvmAdminNotices']);
+
+            // AJAX actions
+            add_action('wp_ajax_mvm_update_visibility', [$this, 'MvmAjaxUpdateVisibility']);
+            add_action('wp_ajax_mvm_bulk_update_visibility', [$this, 'MvmAjaxBulkUpdateVisibility']);
+
+            // Enqueue scripts
+            add_action('admin_enqueue_scripts', [$this, 'MvmEnqueueScripts']);
+
+            //show donate link
+            // Add link for site admin Plugins page
+            add_filter('plugin_row_meta', [$this, 'MvmAddDonateLink'], 10, 2);
+
+        }
+    }
 
 
+    /**
+     *
+     * Load plugin textdomain for translations.
+     *
+     * @return void
+     */
+    public function MvmUniqueLanguages()
+    {
+        load_plugin_textdomain('multisite-visibility-manager', false, dirname(plugin_basename(__FILE__)) . '/languages');
+    }
 
-        /**
-         * Constructor to initialize the plugin.
-         * 
-         * @return void
-         */
-        public function __construct()
-        {
-            if (is_multisite() && is_main_site()) {
+    /**
+     * Register the admin menu for the plugin.
+     *
+     * @return void
+     */
+    public function MvmRegisterMenu()
+    {
+        add_menu_page(
+            'Multisite Visibility',
+            'Visibility Manager',
+            'manage_network_options',
+            'multisite-visibility-manager',
+            [$this, 'settingsPage'],
+            'dashicons-visibility',
+            90
+        );
+    }
 
-                add_action('network_admin_menu', [$this, 'MvmRegisterMenu']);
-                add_action('network_admin_notices', [$this, 'MvmAdminNotices']);
+    /**
+     * Display admin notices.
+     *
+     * @return void
+     */
+    public function adminNotices()
+    {
+        if (isset($_GET['visibility_updated']) && $_GET['visibility_updated'] === 'true') {
+            echo '<div class="notice notice-success is-dismissible"><p>Visibility settings updated successfully.</p></div>';
+        }
+    }
 
-                // AJAX actions
-                add_action('wp_ajax_mvm_update_visibility', [$this, 'MvmAjaxUpdateVisibility']);
-                add_action('wp_ajax_mvm_bulk_update_visibility', [$this, 'MvmAjaxBulkUpdateVisibility']);
-
-                // Enqueue scripts
-                add_action('admin_enqueue_scripts', [$this, 'MvmEnqueueScripts']);
-
-                //show donate link
-                // Add link for site admin Plugins page
-                add_filter('plugin_row_meta', [$this, 'MvmAddDonateLink'], 10, 2);
-                add_action('init', [$this, 'MvmUniqueLanguages']);
-            }
+    /**
+     * Enqueue scripts and styles for the admin area.
+     *
+     * @param string $hook The current admin page hook.
+     *
+     * @return void|null
+     */
+    public function enqueueScripts($hook)
+    {
+        if ($hook !== 'toplevel_page_multisite-visibility-manager') {
+            return;
         }
 
 
-        /**
-         * Load plugin textdomain for translations.
-         *
-         * @return void
-         */
-        public function MvmUniqueLanguages()
-        {
+        wp_enqueue_style('multisite-visibility-style-css', plugin_dir_url(__DIR__) . 'assets/styles/multisite-visibility-manager.css', [], microtime());
 
-            load_plugin_textdomain('multisite-visibility-manager', false, dirname(plugin_basename(__FILE__)) . '/languages');
+        wp_enqueue_script(
+            'multisite-visibility-manager-js',
+            plugin_dir_url(__DIR__) . '/assets/scripts/multisite-visibility-manager.js',
+            ['jquery'],
+            '3.0',
+            true
+        );
+
+        wp_localize_script(
+            'multisite-visibility-manager-js',
+            'MVM_AJAX',
+            [
+                'ajax_url' => admin_url('admin-ajax.php'),
+                'nonce'    => wp_create_nonce('update_visibility_nonce')
+            ]
+        );
+    }
+
+    /**
+     * Render the settings page for the plugin.
+     *
+     * @return void
+     */
+    public function settingsPage()
+    {
+        if (!current_user_can('manage_network_options')) {
+            wp_die(__('You do not have permission to access this page.', 'multisite-visibility-manager'));
         }
 
-        /**
-         * Register the admin menu for the plugin.
-         *
-         * @return void
-         */
-        public function MvmRegisterMenu()
-        {
-            add_menu_page(
-                'Multisite Visibility',
-                'Visibility Manager',
-                'manage_network_options',
-                'multisite-visibility-manager',
-                [$this, 'settingsPage'],
-                'dashicons-visibility',
-                90
-            );
-        }
-
-        /**
-         * Display admin notices.
-         *
-         * @return void
-         */
-        public function MvmAdminNotices()
-        {
-            if (isset($_GET['visibility_updated']) && $_GET['visibility_updated'] === 'true') {
-                echo '<div class="notice notice-success is-dismissible"><p>Visibility settings updated successfully.</p></div>';
-            }
-        }
-
-        /**
-         * Enqueue scripts and styles for the admin area.
-         *
-         * @param string $hook The current admin page hook.
-         * 
-         * @return void|null
-         */
-        public function MvmEnqueueScripts($hook)
-        {
-            if ($hook !== 'toplevel_page_multisite-visibility-manager') {
-                return;
-            }
-
-
-            wp_enqueue_style('multisite-visibility-style-css', plugin_dir_url(__DIR__) . 'assets/styles/multisite-visibility-manager.css', [], microtime());
-
-            wp_enqueue_script(
-                'multisite-visibility-manager-js',
-                plugin_dir_url(__DIR__) . '/assets/scripts/multisite-visibility-manager.js',
-                ['jquery'],
-                '3.0',
-                true
-            );
-
-            wp_localize_script(
-                'multisite-visibility-manager-js',
-                'MVM_AJAX',
-                [
-                    'ajax_url' => admin_url('admin-ajax.php'),
-                    'nonce'    => wp_create_nonce('update_visibility_nonce')
-                ]
-            );
-        }
-
-        /**
-         * Render the settings page for the plugin.
-         *
-         * @return void
-         */
-        public function settingsPage()
-        {
-            if (!current_user_can('manage_network_options')) {
-                wp_die(__('You do not have permission to access this page.', 'multisite-visibility-manager'));
-            }
-
-
-            $search = isset($_GET['search']) ? sanitize_text_field($_GET['search']) : '';
-            $sites = get_sites(['number' => 0]);
-            ?>
+        $search = isset($_GET['search']) ? sanitize_text_field($_GET['search']) : '';
+        $sites = get_sites(['number' => 0]);
+        ?>
             <div class="wrap">
                 <div class="donate-link">
                     <h1>Multisite Visibility Manager</h1>
-                    <img src="<?php echo esc_url(plugin_dir_url(__DIR__) . 'assets/images/donate.jpg'); ?>" alt="Donate Icon" style="width:100px;height:100px;cursor:pointer;">
+                    <img src="<?php echo esc_url(plugin_dir_url(__DIR__) . 'assets/images/donate.jpg'); ?>" alt="Donate Icon" style="width:100px;height:100px;">
                 </div>
 
                 <form method="get">
                     <input type="hidden" name="page" value="multisite-visibility-manager">
                     <p>
                         <input type="text" name="search" value="<?php echo esc_attr($search); ?>" placeholder="Search by domain or path" />
-                        <?php
-                        if (isset($_GET['search']) && !empty($_GET['search'])) {
-                            $url = sanitize_text_field($_SERVER['REQUEST_URI']);
-                            $new_url = remove_query_arg('search', $url);
-                            ?>
+                    <?php
+                    if (isset($_GET['search']) && !empty($_GET['search'])) {
+                        $url = $_SERVER['REQUEST_URI'];
+                        $new_url = remove_query_arg('search', $url);
+                        ?>
                             <a href="<?php echo esc_url($new_url); ?>" class="button">
                                 Reset
                             </a>
-                        <?php } else { ?>
+                    <?php } else { ?>
                             <button type="submit" class="button">Search</button>
                             <?php
-                        }
-                        ?>
+                    }
+                    ?>
 
                     </p>
                 </form>
@@ -231,83 +228,78 @@
 
             </div>
             <?php
+    }
+
+    /**
+     * Handle AJAX request to update visibility for a single site.
+     *
+     * @return void
+     */
+    public function ajaxUpdateVisibility()
+    {
+        check_ajax_referer('update_visibility_nonce');
+
+        if (!current_user_can('manage_network_options')) {
+            wp_send_json_error('You are Unauthorized');
         }
 
-        /**
-         * Handle AJAX request to update visibility for a single site.
-         *
-         * @return void
-         */
-        public function MvmAjaxUpdateVisibility()
-        {
+        $site_id = isset($_POST['site_id']) ? intval($_POST['site_id']) : 0;
+        $status  = isset($_POST['status']) && $_POST['status'] === 'true' ? 0 : 1;
 
+        if ($site_id > 0) {
+            switch_to_blog($site_id);
+            update_option('blog_public', $status);
+            restore_current_blog();
 
-            if (!current_user_can('manage_network_options')) {
-                wp_send_json_error('You are Unauthorized');
-            }
+            wp_send_json_success(['message' => 'Visibility updated successfully']);
+        }
 
-            check_ajax_referer('update_visibility_nonce', 'nonce');
+        wp_send_json_error('Invalid site ID');
+    }
 
-            $site_id = isset($_POST['site_id']) ? intval($_POST['site_id']) : 0;
-            $status  = isset($_POST['status']) && $_POST['status'] === 'true' ? 0 : 1;
+    /**
+     * Handle AJAX request for bulk updating visibility.
+     *
+     * @return void
+     */
+    public function ajaxBulkUpdateVisibility()
+    {
+        check_ajax_referer('update_visibility_nonce');
 
-            if ($site_id > 0) {
+        if (!current_user_can('manage_network_options')) {
+            wp_send_json_error(__('You are Unauthorized', 'multisite-visibility-manager'));
+        }
+
+        $site_ids = isset($_POST['site_ids']) ? array_map('intval', $_POST['site_ids']) : [];
+        $status   = isset($_POST['status']) && $_POST['status'] === 'discourage' ? 0 : 1;
+
+        if (!empty($site_ids)) {
+            foreach ($site_ids as $site_id) {
                 switch_to_blog($site_id);
                 update_option('blog_public', $status);
                 restore_current_blog();
-
-                wp_send_json_success(['message' => 'Visibility updated successfully']);
             }
 
-            wp_send_json_error('Invalid site ID');
+            wp_send_json_success(['message' => 'Bulk visibility update completed']);
         }
 
-        /**
-         * Handle AJAX request for bulk updating visibility.
-         *
-         * @return void
-         */
-        public function MvmAjaxBulkUpdateVisibility()
-        {
-
-
-            if (!current_user_can('manage_network_options')) {
-                wp_send_json_error(__('You are Unauthorized', 'multisite-visibility-manager'));
-            }
-
-            check_ajax_referer('update_visibility_nonce');
-
-            $site_ids = isset($_POST['site_ids']) ? array_map('intval', $_POST['site_ids']) : [];
-            $status   = isset($_POST['status']) && $_POST['status'] === 'discourage' ? 0 : 1;
-
-            if (!empty($site_ids)) {
-                foreach ($site_ids as $site_id) {
-                    switch_to_blog($site_id);
-                    update_option('blog_public', $status);
-                    restore_current_blog();
-                }
-
-                wp_send_json_success(['message' => 'Bulk visibility update completed']);
-            }
-
-            wp_send_json_error('No sites selected for bulk update');
-        }
-
-        /**
-         * Add a donate link to the plugin action links.
-         *
-         * @param array  $links Existing plugin action links.
-         * @param string $file  The plugin file path.
-         * 
-         * @return array Modified plugin action links.
-         */
-        public function MvmAddDonateLink($links, $file)
-        {
-
-            if ($file == 'multisite-visibility-manager/multisite-visibility-manager.php') {
-                $links[] = '<a href="<?php echo esc_url(https://www.buymeacoffee.com/abbeymaniak); ?>" target="_blank" style="color: #ff3131;font-weight: bold;">' . __('Donate', 'multisite-visibility-manager') . '</a>';
-            }
-            return $links;
-        }
+        wp_send_json_error('No sites selected for bulk update');
     }
 
+    /**
+     * Add a donate link to the plugin action links.
+     *
+     * @param array  $links Existing plugin action links.
+     * @param string $file  The plugin file path.
+     *
+     * @return array Modified plugin action links.
+     */
+    public function addDonateLink($links, $file)
+    {
+
+        if ($file == 'multisite-visibility-manager/multisite-visibility-manager.php') {
+            $links[] = '<a href="https://www.buymeacoffee.com/abbeymaniak" target="_blank" style="color: #ff3131;font-weight: bold;">' . __('Donate', 'multisite-visibility-manager') . '</a>';
+        }
+        return $links;
+    }
+}
