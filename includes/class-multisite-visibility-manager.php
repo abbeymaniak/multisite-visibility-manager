@@ -15,15 +15,15 @@
 
 namespace Mvm\MultisiteVisibilityManager;
 
-    /**
-     * This is the Multisite Visibility Manager class.
-     *
-     * @category Plugin
-     * @package  MultisiteVisibilityManager
-     * @author   Abiodun Paul Ogunnaike <primastech101@gmail.com>
-     * @license  http://www.gnu.org/licenses/gpl-2.0.txt GPLv2 or later
-     * @link     https://github.com/abbeymaniak/multisite-visibility-manager
-     */
+/**
+ * This is the Multisite Visibility Manager class.
+ *
+ * @category Plugin
+ * @package  MultisiteVisibilityManager
+ * @author   Abiodun Paul Ogunnaike <primastech101@gmail.com>
+ * @license  http://www.gnu.org/licenses/gpl-2.0.txt GPLv2 or later
+ * @link     https://github.com/abbeymaniak/multisite-visibility-manager
+ */
 class MultisiteVisibilityManager
 {
 
@@ -35,7 +35,6 @@ class MultisiteVisibilityManager
     public function __construct()
     {
         if (is_multisite() && is_main_site()) {
-           
             add_action('network_admin_menu', [$this, 'mvmRegisterMenu']);
             add_action('network_admin_notices', [$this, 'mvmAdminNotices']);
 
@@ -112,7 +111,7 @@ class MultisiteVisibilityManager
             'MVM_AJAX',
             [
                 'ajax_url' => admin_url('admin-ajax.php'),
-                'nonce'    => wp_create_nonce('update_visibility_nonce')
+                'nonce'    => wp_create_nonce('mvm_update_visibility_nonce')
             ]
         );
     }
@@ -131,91 +130,92 @@ class MultisiteVisibilityManager
         $search = isset($_GET['search']) ? sanitize_text_field($_GET['search']) : '';
         $sites = get_sites(['number' => 0]);
         ?>
-            <div class="wrap">
-                <div class="donate-link">
-                    <h1>Multisite Visibility Manager</h1>
-                    <img src="<?php echo esc_url(plugin_dir_url(__DIR__) . 'assets/images/donate.jpg'); ?>" alt="Donate Icon" style="width:100px;height:100px;">
-                </div>
+        <div class="wrap">
+            <div class="donate-link">
+                <h1>Multisite Visibility Manager</h1>
+                <img src="<?php echo esc_url(plugin_dir_url(__DIR__) . 'assets/images/donate.jpg'); ?>" alt="Donate Icon" style="width:100px;height:100px;">
+            </div>
 
-                <form method="get">
-                    <input type="hidden" name="page" value="multisite-visibility-manager">
-                    <p>
-                        <input type="text" name="search" value="<?php echo esc_attr($search); ?>" placeholder="Search by domain or path" />
+            <form method="get">
+                <input type="hidden" name="page" value="multisite-visibility-manager">
+                <p>
+                    <?php wp_nonce_field('mvm_settings_search', 'mvm_settings_nonce'); ?>
+                    <input type="text" name="search" value="<?php echo esc_attr($search); ?>" placeholder="Search by domain or path" />
                     <?php
                     if (isset($_GET['search']) && !empty($_GET['search'])) {
-                        $url = $_SERVER['REQUEST_URI'];
+                        $url = esc_url_raw(add_query_arg(null, null));
                         $new_url = remove_query_arg('search', $url);
                         ?>
-                            <a href="<?php echo esc_url($new_url); ?>" class="button">
-                                Reset
-                            </a>
+                        <a href="<?php echo esc_url($new_url); ?>" class="button">
+                            Reset
+                        </a>
                     <?php } else { ?>
-                            <button type="submit" class="button">Search</button>
-                            <?php
+                        <button type="submit" class="button">Search</button>
+                        <?php
                     }
                     ?>
 
-                    </p>
-                </form>
+                </p>
+            </form>
 
-                <div style="margin: 10px 0;">
-                    <select id="bulk-action">
-                        <option value="">Bulk Actions</option>
-                        <option value="discourage">Discourage All</option>
-                        <option value="allow">Allow All</option>
-                    </select>
-                    <button id="apply-bulk" class="button button-secondary">Apply</button>
-                </div>
-
-                <table class="widefat fixed striped" id="visibility-table">
-                    <thead>
-                        <tr>
-                            <th><input type="checkbox" id="select-all" /></th>
-                            <th>Site</th>
-                            <th>Domain</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($sites as $site) :
-                            if ($search && stripos($site->domain . $site->path, $search) === false) {
-                                continue;
-                            }
-
-
-                            switch_to_blog($site->blog_id);
-                            $is_discouraged = get_option('blog_public') == 0;
-                            restore_current_blog();
-                            ?>
-                            <tr>
-                                <td><input type="checkbox" class="site-checkbox" data-site="<?php echo esc_attr($site->blog_id); ?>" /></td>
-                                <td><?php echo esc_html($site->blogname); ?></td>
-                                <td><?php echo esc_html($site->domain . $site->path); ?></td>
-                                <td class="status"><?php echo $is_discouraged ? 'Discouraged' : 'Allowed'; ?></td>
-                                <td>
-                                    <label>
-                                        <input type="checkbox" class="visibility-toggle" data-site="<?php echo esc_attr($site->blog_id); ?>" <?php checked($is_discouraged); ?> />
-                                    </label>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-
-                <!-- Update Progress Modal -->
-                <div id="progress-modal" class="progress-modal hidden">
-                    <div class="progress-box">
-                        <h2>Updating Sites...</h2>
-                        <div class="progress-bar">
-                            <div class="progress-fill"></div>
-                        </div>
-                        <p class="progress-text">0% Complete</p>
-                    </div>
-                </div>
-
+            <div style="margin: 10px 0;">
+                <select id="bulk-action">
+                    <option value="">Bulk Actions</option>
+                    <option value="discourage">Discourage All</option>
+                    <option value="allow">Allow All</option>
+                </select>
+                <button id="apply-bulk" class="button button-secondary">Apply</button>
             </div>
-            <?php
+
+            <table class="widefat fixed striped" id="visibility-table">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="select-all" /></th>
+                        <th>Site</th>
+                        <th>Domain</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($sites as $site) :
+                        if ($search && stripos($site->domain . $site->path, $search) === false) {
+                            continue;
+                        }
+
+
+                        switch_to_blog($site->blog_id);
+                        $is_discouraged = get_option('blog_public') == 0;
+                        restore_current_blog();
+                        ?>
+                        <tr>
+                            <td><input type="checkbox" class="site-checkbox" data-site="<?php echo esc_attr($site->blog_id); ?>" /></td>
+                            <td><?php echo esc_html($site->blogname); ?></td>
+                            <td><?php echo esc_html($site->domain . $site->path); ?></td>
+                            <td class="status"><?php echo $is_discouraged ? 'Discouraged' : 'Allowed'; ?></td>
+                            <td>
+                                <label>
+                                    <input type="checkbox" class="visibility-toggle" data-site="<?php echo esc_attr($site->blog_id); ?>" <?php checked($is_discouraged); ?> />
+                                </label>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+
+            <!-- Update Progress Modal -->
+            <div id="progress-modal" class="progress-modal hidden">
+                <div class="progress-box">
+                    <h2>Updating Sites...</h2>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <p class="progress-text">0% Complete</p>
+                </div>
+            </div>
+
+        </div>
+        <?php
     }
 
     /**
@@ -225,14 +225,17 @@ class MultisiteVisibilityManager
      */
     public function mvmajaxUpdateVisibility()
     {
-        check_ajax_referer('update_visibility_nonce');
-
         if (!current_user_can('manage_network_options')) {
             wp_send_json_error('You are Unauthorized');
         }
 
+        check_ajax_referer('mvm_update_visibility_nonce');
+
+
+
         $site_id = isset($_POST['site_id']) ? intval($_POST['site_id']) : 0;
         $status  = isset($_POST['status']) && $_POST['status'] === 'true' ? 0 : 1;
+
 
         if ($site_id > 0) {
             switch_to_blog($site_id);
@@ -252,13 +255,17 @@ class MultisiteVisibilityManager
      */
     public function mvmajaxBulkUpdateVisibility()
     {
-        check_ajax_referer('update_visibility_nonce');
+        if (!current_user_can('manage_network_options')) {
+            wp_send_json_error('You are Unauthorized');
+        }
+
+        check_ajax_referer('mvm_update_visibility_nonce');
 
         if (!current_user_can('manage_network_options')) {
             wp_send_json_error(__('You are Unauthorized', 'multisite-visibility-manager'));
         }
 
-        $site_ids = isset($_POST['site_ids']) ? array_map('intval', $_POST['site_ids']) : [];
+        $site_ids = isset($_POST['site_id']) ?  (array) $_POST['site_id'] : [];
         $status   = isset($_POST['status']) && $_POST['status'] === 'discourage' ? 0 : 1;
 
         if (!empty($site_ids)) {
@@ -267,7 +274,7 @@ class MultisiteVisibilityManager
                 update_option('blog_public', $status);
                 restore_current_blog();
             }
-
+           
             wp_send_json_success(['message' => 'Bulk visibility update completed']);
         }
 
